@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-tournament_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tournament_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-tournament_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-tournament_user} -d ${POSTGRES_DB:-tournament_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-tournament_user}:${POSTGRES_PASSWORD:-tournament_pass}@db:5432/${POSTGRES_DB:-tournament_db}
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+      ENV: ${ENV:-dev}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tournament-config
+  namespace: tournament
+data:
+  DATABASE_URL: "postgresql://tournament_user:tournament_pass@db-service:5432/tournament_db"
+  POSTGRES_DB: "tournament_db"
+  POSTGRES_USER: "tournament_user"
