@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: YOUR_DOCKERHUB_USERNAME/tournament-frontend:latest
+          image: ile04/tournament-frontend:latest
           ports:
             - containerPort: 80
