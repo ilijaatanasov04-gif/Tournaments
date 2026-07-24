@@ -4,18 +4,18 @@ metadata:
   name: tournament-ingress
   namespace: tournament
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: nginx
   rules:
     - host: tournament.local
       http:
         paths:
-          - path: /api
-            pathType: Prefix
+          - path: /api(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
               service:
-                name: backend-service
+                name: backend
                 port:
                   number: 8000
           - path: /
