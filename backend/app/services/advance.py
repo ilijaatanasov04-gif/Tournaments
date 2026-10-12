@@ -38,6 +38,11 @@ def _ranked_teams_per_group(db: Session, tournament_id: int) -> dict[str, list[m
 # the other group in their pair. 1A-2B, 1B-2A, 1C-2D, 1D-2C, etc.
 _R16_GROUP_PAIRS = [("A", "B"), ("C", "D"), ("E", "F"), ("G", "H")]
 
+# Formats that share this module's group-stage + cross-group-knockout engine.
+# All formats registered today use it; a genuinely different shape (e.g. a
+# round-robin-only league) would need its own seeder and shouldn't be added here.
+_GROUP_KNOCKOUT_FORMATS = {formats.STANDARD.key, formats.FOUR_GROUPS.key, formats.TWO_GROUPS.key}
+
 
 # ── Group-stage round-robin auto-generation ──────────────────────────────
 
@@ -203,7 +208,7 @@ def seed_first_knockout_for_ready_pairs(db: Session, tournament: models.Tourname
     """For each group pair (A-B, C-D, E-F, G-H), if both groups are complete and the
     pair's first-round knockout matches don't yet exist, create them. The target
     phase adapts to the number of groups in use (see _first_knockout_phase_key)."""
-    if tournament.format != "standard":
+    if tournament.format not in _GROUP_KNOCKOUT_FORMATS:
         return []
 
     first_phase = _first_knockout_phase_key(db, tournament)
@@ -389,7 +394,7 @@ def seed_first_knockout_phase(db: Session, tournament: models.Tournament) -> lis
     spec = formats.get_format(tournament.format)
     if not spec:
         raise ValueError(f"Unknown format '{tournament.format}'")
-    if tournament.format != "standard":
+    if tournament.format not in _GROUP_KNOCKOUT_FORMATS:
         raise ValueError(f"No seeder implemented for format '{tournament.format}'")
 
     created = seed_first_knockout_for_ready_pairs(db, tournament)

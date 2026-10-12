@@ -411,27 +411,27 @@ export default function TournamentDetail({ user: userProp }) {
                 <section style={s.winner}>
                   <div style={s.winnerAccent} />
                   <div style={s.winnerLeft}>
-                    <div style={s.winnerTrophy}>🏆</div>
+                    <TrophyIcon style={s.winnerTrophy} />
                     <div>
-                      <div style={{ ...s.label, color: "var(--gold-bright)" }}>Tournament Winner</div>
+                      <div style={s.label}>Tournament Winner</div>
                       <div style={s.winnerTitle}>{champion}</div>
                     </div>
                   </div>
                   <div style={s.winnerRight}>
                     <div style={s.label}>Final Score</div>
                     <div style={s.scoreText}>
-                      <span style={{ color: homeWon ? "var(--gold-bright)" : "rgba(255,255,255,.8)", fontWeight: homeWon ? 900 : 700 }}>
+                      <span style={{ color: homeWon ? "var(--ink)" : "var(--muted)", fontWeight: homeWon ? 600 : 500 }}>
                         {teamName(finalMatch.home_team_id)}
                       </span>
-                      <span style={{ color: "#fff", margin: "0 8px", fontVariantNumeric: "tabular-nums" }}>
+                      <span style={{ color: "var(--ink)", margin: "0 8px", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
                         {finalMatch.score_home} – {finalMatch.score_away}
                         {onPens && (
-                          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--gold)", marginLeft: 6 }}>
+                          <span style={{ fontSize: 13, fontWeight: 500, color: "var(--gold)", marginLeft: 6 }}>
                             ({finalMatch.pen_home}–{finalMatch.pen_away} pens)
                           </span>
                         )}
                       </span>
-                      <span style={{ color: !homeWon ? "var(--gold-bright)" : "rgba(255,255,255,.8)", fontWeight: !homeWon ? 900 : 700 }}>
+                      <span style={{ color: !homeWon ? "var(--ink)" : "var(--muted)", fontWeight: !homeWon ? 600 : 500 }}>
                         {teamName(finalMatch.away_team_id)}
                       </span>
                     </div>
@@ -468,12 +468,17 @@ export default function TournamentDetail({ user: userProp }) {
                     <div style={{ marginTop: 14, maxWidth: 420 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                         <span style={s.label}>Progress</span>
-                        <span style={{ fontSize: 12, color: "var(--text)", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+                        <span style={{ fontSize: 12, color: "var(--ink)", fontWeight: 620, fontVariantNumeric: "tabular-nums" }}>
                           {finishedMatches}/{totalMatches} · {pct}%
                         </span>
                       </div>
-                      <div style={{ height: 4, background: "var(--border)", borderRadius: 2, overflow: "hidden" }}>
-                        <div style={{ width: `${pct}%`, height: "100%", background: "var(--accent)", transition: "width .3s ease" }} />
+                      <div style={{ height: 6, background: "var(--surface3)", borderRadius: 99, overflow: "hidden", boxShadow: "inset 0 1px 2px rgba(16,24,40,.06)" }}>
+                        <div style={{
+                          width: `${pct}%`, height: "100%", borderRadius: 99,
+                          background: "linear-gradient(90deg, var(--accent-lt), var(--accent-dk))",
+                          boxShadow: "0 1px 4px -1px rgba(var(--accent-rgb),.5)",
+                          transition: "width .5s var(--ease)",
+                        }} />
                       </div>
                     </div>
                   )}
@@ -503,7 +508,9 @@ export default function TournamentDetail({ user: userProp }) {
                     onChange={e => setTeamForm(f => ({ ...f, group_name: e.target.value.toUpperCase() }))} />
                   <button type="submit" style={s.primaryBtn}>+ Add Team</button>
                   <span style={{ flexBasis: "100%", fontSize: 11, color: "var(--muted)", marginTop: 2 }}>
-                    Groups pair up as A–B, C–D, E–F, G–H — use 2, 4 or 8 groups for a complete bracket.
+                    {formatSpec
+                      ? `This format uses ${formatSpec.group_count} groups (A–${String.fromCharCode(64 + formatSpec.group_count)}), pairing A–B, C–D, E–F, G–H for the knockout draw.`
+                      : "Groups pair up as A–B, C–D, E–F, G–H — use 2, 4 or 8 groups for a complete bracket."}
                   </span>
                 </form>
               )}
@@ -514,10 +521,10 @@ export default function TournamentDetail({ user: userProp }) {
 
       {(() => {
         const prizes = [
-          { key: "prize_first",  rank: "01", place: "First Place",  emoji: "🏆", color: "var(--gold)" },
-          { key: "prize_second", rank: "02", place: "Second Place", emoji: "🥈", color: "#64748b" },
-          { key: "prize_third",  rank: "03", place: "Third Place",  emoji: "🥉", color: "#92400e" },
-          { key: "prize_fourth", rank: "04", place: "Fourth Place", emoji: "",   color: "var(--muted)" },
+          { key: "prize_first",  rank: "01", place: "First Place",  color: "var(--gold)", bg: "rgba(180,83,9,.15)" },
+          { key: "prize_second", rank: "02", place: "Second Place", color: "#64748b",      bg: "rgba(100,116,139,.14)" },
+          { key: "prize_third",  rank: "03", place: "Third Place",  color: "#92400e",      bg: "rgba(146,64,14,.14)" },
+          { key: "prize_fourth", rank: "04", place: "Fourth Place", color: "var(--muted)", bg: "rgba(102,112,133,.12)" },
         ];
         const hasAnyPrize = tournament.prize_pool != null
           || prizes.some(p => tournament[p.key] != null);
@@ -545,18 +552,20 @@ export default function TournamentDetail({ user: userProp }) {
                     ...s.prizeItem,
                     borderRight: i < prizes.length - 1 ? "1px solid var(--border)" : "none",
                   }}>
-                    <div style={{ ...s.label, color: p.color }}>{p.rank}</div>
-                    <div style={{ ...s.label, marginTop: 8 }}>{p.place}</div>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 4, minHeight: 40 }}>
-                      <div style={{
-                        ...s.prizeAmount,
-                        color: isSet ? (p.rank === "01" ? p.color : "var(--text)") : "var(--muted)",
-                      }}>
-                        {isSet ? `€${value.toLocaleString()}` : "—"}
-                      </div>
-                      <div style={{ fontSize: 32, width: 36, textAlign: "right", lineHeight: 1 }}>
-                        {p.emoji || ""}
-                      </div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ ...s.label, color: p.color }}>{p.place}</div>
+                      <span style={{
+                        width: 28, height: 28, borderRadius: 9, flexShrink: 0,
+                        display: "inline-grid", placeItems: "center",
+                        background: p.bg, color: p.color,
+                        fontWeight: 660, fontSize: 13, fontVariantNumeric: "tabular-nums",
+                      }}>{i + 1}</span>
+                    </div>
+                    <div style={{
+                      ...s.prizeAmount, marginTop: 14,
+                      color: isSet ? (p.rank === "01" ? p.color : "var(--text)") : "var(--muted)",
+                    }}>
+                      {isSet ? `€${value.toLocaleString()}` : "—"}
                     </div>
                   </div>
                 );
@@ -610,17 +619,20 @@ export default function TournamentDetail({ user: userProp }) {
                         <tr key={t.id} style={inAdvancingRank ? s.advancingRow : {}}>
                           <td>
                             <span style={{
-                              width: 30, height: 30, borderRadius: "50%",
+                              width: 28, height: 28, borderRadius: 9,
                               display: "inline-grid", placeItems: "center",
-                              background: inAdvancingRank ? "rgba(var(--accent-rgb),.20)" : "var(--surface2)",
-                              color: inAdvancingRank ? "var(--accent)" : "var(--muted)",
-                              fontWeight: 900, fontSize: 12,
+                              background: inAdvancingRank
+                                ? "linear-gradient(160deg, rgba(var(--accent-rgb),.18), rgba(var(--accent-rgb),.08))"
+                                : "var(--surface2)",
+                              boxShadow: inAdvancingRank ? "inset 0 0 0 1px rgba(var(--accent-rgb),.18)" : "none",
+                              color: inAdvancingRank ? "var(--accent)" : "var(--faint)",
+                              fontWeight: 660, fontSize: 12.5, fontVariantNumeric: "tabular-nums",
                             }}>{i + 1}</span>
                           </td>
-                          <td style={{ fontWeight: 800 }}>
+                          <td style={{ fontWeight: 600, color: "var(--ink)", letterSpacing: "-.012em" }}>
                             {t.name}
                             {inAdvancingRank && (
-                              <span style={{ color: "var(--accent)", fontSize: 12, marginLeft: 6 }}> ↑ advances</span>
+                              <span style={{ color: "var(--accent)", fontSize: 12, fontWeight: 550, marginLeft: 7 }}>↑ advances</span>
                             )}
                           </td>
                           <td style={s.statCell}>{rec.P}</td>
@@ -629,13 +641,13 @@ export default function TournamentDetail({ user: userProp }) {
                           <td style={s.statCell}>{rec.L}</td>
                           <td style={s.statCell}>{st?.goals_scored ?? 0}</td>
                           <td style={s.statCell}>{st?.goals_conceded ?? 0}</td>
-                          <td style={{ ...s.statCell, color: (st?.goal_diff ?? 0) > 0 ? "var(--accent)" : (st?.goal_diff ?? 0) < 0 ? "var(--red)" : "var(--muted)", fontWeight: 700 }}>
+                          <td style={{ ...s.statCell, color: (st?.goal_diff ?? 0) > 0 ? "var(--accent)" : (st?.goal_diff ?? 0) < 0 ? "var(--red)" : "var(--faint)", fontWeight: 600 }}>
                             {(st?.goal_diff ?? 0) > 0 ? "+" : ""}{st?.goal_diff ?? 0}
                           </td>
                           <td style={{
                             ...s.statCell,
-                            fontWeight: 900,
-                            color: (st?.points ?? 0) >= 7 ? "var(--accent)" : (st?.points ?? 0) <= 4 ? "var(--orange)" : "var(--text)",
+                            fontWeight: 700, fontSize: 15, letterSpacing: "-.02em",
+                            color: (st?.points ?? 0) >= 7 ? "var(--accent)" : (st?.points ?? 0) <= 4 ? "var(--orange)" : "var(--ink)",
                           }}>{st?.points ?? 0}</td>
                         </tr>
                         );
@@ -918,7 +930,7 @@ export default function TournamentDetail({ user: userProp }) {
             <button className="btn btn-primary" type="submit">+ Grant Access</button>
           </form>
 
-          <div style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 8 }}>
+          <div style={{ fontSize: 12, fontWeight: 500, color: "var(--muted)", marginBottom: 8 }}>
             People with edit access
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -946,13 +958,13 @@ export default function TournamentDetail({ user: userProp }) {
 
       <section className="info-grid" style={{ ...s.shadowCard, ...s.footerInfo }}>
         {[
-          ["📅", "Date",            "TBA"],
-          ["👥", "Format",          "8 Groups + Knockout"],
-          ["⏱",  "Match Duration", "2 × 20 min"],
-          ["📍", "Location",        tournament.location || "—"],
+          ["calendar", "Date",            "TBA"],
+          ["groups",   "Format",          formatSpec?.label || "—"],
+          ["clock",    "Match Duration", "2 × 20 min"],
+          ["pin",      "Location",        tournament.location || "—"],
         ].map(([icon, label, value]) => (
           <div key={label} style={s.infoItem}>
-            <div style={s.iconCircle}>{icon}</div>
+            <div style={s.iconCircle}><InfoIcon kind={icon} /></div>
             <div>
               <div style={s.label}>{label}</div>
               <div style={{ marginTop: 6, fontSize: 16, color: "var(--text)", fontWeight: 600 }}>{value}</div>
@@ -964,9 +976,52 @@ export default function TournamentDetail({ user: userProp }) {
   );
 }
 
+function TrophyIcon({ style }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" style={style}>
+      <path d="M7 3h10v6a5 5 0 0 1-5 5 5 5 0 0 1-5-5V3Z" stroke="var(--gold-bright)" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M7 4.5H4.75A1.75 1.75 0 0 0 3 6.25v.75A3.5 3.5 0 0 0 6.5 10.5H7" stroke="var(--gold-bright)" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M17 4.5h2.25A1.75 1.75 0 0 1 21 6.25v.75a3.5 3.5 0 0 1-3.5 3.5H17" stroke="var(--gold-bright)" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M12 14v3.5M9 21h6M9.4 21c.1-1.4.7-2.6 1.4-3.5h2.4c.7.9 1.3 2.1 1.4 3.5" stroke="var(--gold-bright)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+const INFO_ICON_PATHS = {
+  calendar: <>
+    <rect x="3.5" y="5" width="17" height="15" rx="2" />
+    <path d="M3.5 9.5h17" />
+    <path d="M8 3v3M16 3v3" />
+  </>,
+  groups: <>
+    <rect x="3.5" y="3.5" width="7" height="7" rx="1.2" />
+    <rect x="13.5" y="3.5" width="7" height="7" rx="1.2" />
+    <rect x="3.5" y="13.5" width="7" height="7" rx="1.2" />
+    <rect x="13.5" y="13.5" width="7" height="7" rx="1.2" />
+  </>,
+  clock: <>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M12 7.5V12l3.2 2" />
+  </>,
+  pin: <>
+    <path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" />
+    <circle cx="12" cy="9" r="2.4" />
+  </>,
+};
+
+function InfoIcon({ kind }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      {INFO_ICON_PATHS[kind]}
+    </svg>
+  );
+}
+
 /* ── Knockout Bracket ── */
 function KnockoutBracket({ phases, phaseLabel, matches, teamName, isOrganizer, setResultForm, dateEdit, setDateEdit, saveMatchDate }) {
-  const B = "2px solid var(--border2)";
+  const B = "2px solid rgba(16,24,40,.22)";
+  const BA = "2px solid rgba(var(--accent-rgb),.6)";
 
   if (phases.length === 0) {
     return <div className="empty">Knockout phase not available for this format.</div>;
@@ -1037,14 +1092,18 @@ function KnockoutBracket({ phases, phaseLabel, matches, teamName, isOrganizer, s
                   </div>
                 </div>
                 {next && (
-                  <div style={{ width: 48, display: "flex", flexDirection: "column", paddingTop: 32 }}>
+                  <div style={{ width: 56, display: "flex", flexDirection: "column", paddingTop: 32 }}>
                     {showConnector
-                      ? Array.from({ length: connectorPairs }).map((_, i) => (
-                          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                            <div style={{ flex: 1, borderBottom: B, borderRight: B, borderRadius: "0 0 8px 0" }} />
-                            <div style={{ flex: 1, borderTop: B, borderRight: B, borderRadius: "0 8px 0 0" }} />
-                          </div>
-                        ))
+                      ? Array.from({ length: connectorPairs }).map((_, i) => {
+                          const topDone = col.items[i * 2]?.status === "finished";
+                          const bottomDone = col.items[i * 2 + 1]?.status === "finished";
+                          return (
+                            <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                              <div style={{ flex: 1, borderBottom: topDone ? BA : B, borderRight: topDone ? BA : B, borderRadius: "0 0 8px 0" }} />
+                              <div style={{ flex: 1, borderTop: bottomDone ? BA : B, borderRight: bottomDone ? BA : B, borderRadius: "0 8px 0 0" }} />
+                            </div>
+                          );
+                        })
                       : <div style={{ flex: 1 }} />}
                   </div>
                 )}
@@ -1067,13 +1126,13 @@ function BracketCard({ match, teamName, isFinal, isOrganizer, setResultForm, dat
 
   if (!match) {
     return (
-      <div style={{ width: 210, flexShrink: 0 }}>
+      <div style={{ width: 226, flexShrink: 0 }}>
         <div style={{
-          border: "1.5px dashed var(--border)", borderRadius: 8, width: 210,
-          background: "var(--surface)", opacity: 0.5, flexShrink: 0,
+          border: "1.5px dashed var(--border2)", borderRadius: 11, width: 226,
+          background: "rgba(255,255,255,.45)", flexShrink: 0,
         }}>
-          <div style={{ padding: "8px 10px", borderBottom: "1px solid var(--border)", color: "var(--muted)", fontSize: 13 }}>TBD</div>
-          <div style={{ padding: "8px 10px", color: "var(--muted)", fontSize: 13 }}>TBD</div>
+          <div style={{ padding: "9px 12px", borderBottom: "1px dashed var(--border)", color: "var(--faint)", fontSize: 13, fontWeight: 500 }}>TBD</div>
+          <div style={{ padding: "9px 12px", color: "var(--faint)", fontSize: 13, fontWeight: 500 }}>TBD</div>
         </div>
       </div>
     );
@@ -1088,7 +1147,7 @@ function BracketCard({ match, teamName, isFinal, isOrganizer, setResultForm, dat
     : null;
 
   return (
-    <div style={{ width: 210, flexShrink: 0 }}>
+    <div style={{ width: 226, flexShrink: 0 }}>
       {isOrganizer && editingDate ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 4 }}>
           <div style={{ display: "flex", gap: 4 }}>
@@ -1121,41 +1180,39 @@ function BracketCard({ match, teamName, isFinal, isOrganizer, setResultForm, dat
         </div>
       )}
       <div style={{
-        border: `1.5px solid ${isFinal ? "var(--accent)" : isFinished ? "rgba(var(--accent-rgb),.35)" : "var(--border)"}`,
-        borderRadius: 8, overflow: "hidden", background: "var(--surface)",
+        borderRadius: 11, overflow: "hidden", background: "var(--surface)",
+        /* The final gets a ring in the accent, decided ties a soft one, and
+           undecided cards just the neutral hairline. */
+        boxShadow: isFinal
+          ? "0 0 0 1.5px var(--accent), 0 6px 18px -6px rgba(var(--accent-rgb),.45), 0 1px 2px rgba(16,24,40,.06)"
+          : isFinished
+            ? "0 0 0 1px rgba(var(--accent-rgb),.3), 0 2px 8px -3px rgba(16,24,40,.12)"
+            : "var(--shadow-xs)",
       }}>
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "8px 10px", borderBottom: "1px solid var(--border)",
-          background: homeWon ? "rgba(var(--accent-rgb),.08)" : "transparent",
-        }}>
-          <span style={{ fontSize: 13, fontWeight: homeWon ? 700 : 500, color: homeWon ? "var(--accent)" : "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>
+        <div style={{ ...bk.slot, borderBottom: "1px solid var(--border)", ...(homeWon ? bk.slotWon : {}) }}>
+          <span style={{ ...bk.slotName, ...(homeWon ? bk.slotNameWon : {}) }}>
             {homeName}
           </span>
           {isFinished && (
-            <span style={{ fontSize: 16, fontWeight: 700, color: homeWon ? "var(--accent)" : "var(--muted)", minWidth: 22, textAlign: "right", whiteSpace: "nowrap" }}>
+            <span style={{ ...bk.slotScore, color: homeWon ? "var(--accent)" : "var(--faint)" }}>
               {match.score_home}
               {wentToPens && (
-                <span style={{ fontSize: 11, fontWeight: 700, color: homeWon ? "var(--gold)" : "var(--muted)", marginLeft: 4 }}>
+                <span style={{ ...bk.penScore, color: homeWon ? "var(--gold)" : "var(--faint)" }}>
                   ({match.pen_home})
                 </span>
               )}
             </span>
           )}
         </div>
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "8px 10px",
-          background: awayWon ? "rgba(var(--accent-rgb),.08)" : "transparent",
-        }}>
-          <span style={{ fontSize: 13, fontWeight: awayWon ? 700 : 500, color: awayWon ? "var(--accent)" : "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>
+        <div style={{ ...bk.slot, ...(awayWon ? bk.slotWon : {}) }}>
+          <span style={{ ...bk.slotName, ...(awayWon ? bk.slotNameWon : {}) }}>
             {awayName}
           </span>
           {isFinished && (
-            <span style={{ fontSize: 16, fontWeight: 700, color: awayWon ? "var(--accent)" : "var(--muted)", minWidth: 22, textAlign: "right", whiteSpace: "nowrap" }}>
+            <span style={{ ...bk.slotScore, color: awayWon ? "var(--accent)" : "var(--faint)" }}>
               {match.score_away}
               {wentToPens && (
-                <span style={{ fontSize: 11, fontWeight: 700, color: awayWon ? "var(--gold)" : "var(--muted)", marginLeft: 4 }}>
+                <span style={{ ...bk.penScore, color: awayWon ? "var(--gold)" : "var(--faint)" }}>
                   ({match.pen_away})
                 </span>
               )}
@@ -1237,7 +1294,7 @@ function ResultModal({ match, teamName, phaseLabel, resultForm, setResultForm, s
 
         {showPens && (
           <div style={{ marginTop: 18 }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: ".7px", margin: 0, marginBottom: 8, textAlign: "center" }}>
+            <p style={{ fontSize: 12, fontWeight: 500, color: "var(--gold)", margin: 0, marginBottom: 8, textAlign: "center" }}>
               Penalty Shootout
             </p>
             <div style={rm.scoreRow}>
@@ -1320,15 +1377,15 @@ function EditTournamentModal({ tournament, onClose, onSave }) {
         </div>
 
         <div style={{ paddingTop: 14, borderTop: "1px solid var(--border)" }}>
-          <p style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".7px", marginBottom: 12 }}>
+          <p style={{ fontSize: 12, fontWeight: 500, color: "var(--muted)", marginBottom: 12 }}>
             Prize Distribution
           </p>
           <div className="prize-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
             {[
-              { key: "prize_first",  label: "🥇 1st" },
-              { key: "prize_second", label: "🥈 2nd" },
-              { key: "prize_third",  label: "🥉 3rd" },
-              { key: "prize_fourth", label: "🎖️ 4th" },
+              { key: "prize_first",  label: "1st" },
+              { key: "prize_second", label: "2nd" },
+              { key: "prize_third",  label: "3rd" },
+              { key: "prize_fourth", label: "4th" },
             ].map(({ key, label }) => (
               <div className="field" key={key}>
                 <label className="field-label">{label} (€)</label>
@@ -1352,45 +1409,45 @@ function EditTournamentModal({ tournament, onClose, onSave }) {
 const rm = {
   overlay: {
     position: "fixed", inset: 0,
-    background: "rgba(16,24,40,.5)",
+    background: "rgba(15,23,41,.42)",
     display: "flex", alignItems: "center", justifyContent: "center",
     zIndex: 1000, padding: 24,
-    backdropFilter: "blur(2px)",
+    backdropFilter: "blur(6px) saturate(140%)",
+    WebkitBackdropFilter: "blur(6px) saturate(140%)",
   },
   card: {
-    background: "var(--surface)", border: "1px solid var(--border)",
-    borderRadius: 14, padding: 24, width: "100%", maxWidth: 420,
-    boxShadow: "0 24px 60px rgba(16,24,40,.18)",
+    background: "var(--surface)", border: "none",
+    borderRadius: 18, padding: 26, width: "100%", maxWidth: 430,
+    boxShadow: "0 0 0 1px rgba(16,24,40,.06), 0 8px 16px -6px rgba(16,24,40,.14), 0 32px 64px -16px rgba(16,24,40,.32)",
   },
   eyebrow: {
-    fontSize: 11, fontWeight: 700, color: "var(--accent)",
-    textTransform: "uppercase", letterSpacing: ".8px", margin: 0,
+    fontSize: 12, fontWeight: 550, color: "var(--faint)", margin: 0,
   },
   closeBtn: {
-    background: "transparent", border: "1px solid var(--border)",
-    color: "var(--muted)", borderRadius: 8, width: 30, height: 30,
+    background: "transparent", border: "1px solid var(--border2)",
+    color: "var(--muted)", borderRadius: 9, width: 30, height: 30,
     cursor: "pointer", fontSize: 14,
   },
   teamsRow: {
     display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 14,
-    alignItems: "center", marginBottom: 18, padding: "12px 14px",
-    background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 10,
+    alignItems: "center", marginBottom: 20, padding: "14px 16px",
+    background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 12,
   },
-  teamName: { fontSize: 15, fontWeight: 600, color: "var(--text)" },
+  teamName: { fontSize: 15, fontWeight: 620, color: "var(--ink)", letterSpacing: "-.015em" },
   scoreRow: { display: "flex", alignItems: "center", justifyContent: "center", gap: 14 },
   scoreInput: {
-    width: 70, height: 56,
-    textAlign: "center", fontSize: 24, fontWeight: 700,
+    width: 72, height: 58,
+    textAlign: "center", fontSize: 25, fontWeight: 680, letterSpacing: "-.03em",
   },
 };
 
 /* ── Section group (Upcoming / Awaiting date / Finished) ── */
-function MatchesGroup({ title, accent, subtitle, children }) {
+function MatchesGroup({ title, subtitle, children }) {
   return (
     <section style={{ marginBottom: 36 }}>
-      <header style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 14 }}>
-        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: accent }}>{title}</h2>
-        {subtitle && <span style={{ fontSize: 12, color: "var(--muted)" }}>{subtitle}</span>}
+      <header style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 16 }}>
+        <h2 style={{ margin: 0, fontSize: 19, fontWeight: 660, color: "var(--ink)", letterSpacing: "-.028em" }}>{title}</h2>
+        {subtitle && <span style={{ fontSize: 12.5, color: "var(--faint)", fontWeight: 500 }}>{subtitle}</span>}
       </header>
       {children}
     </section>
@@ -1405,12 +1462,12 @@ function DateSection({
 }) {
   return (
     <div style={{ marginBottom: 22 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, paddingBottom: 10, borderBottom: `2px solid ${borderColor}` }}>
-        <span style={{ width: 8, height: 8, borderRadius: "50%", background: accent, flexShrink: 0 }} />
-        <h3 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: ".5px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, paddingBottom: 11, borderBottom: `1px solid ${borderColor}` }}>
+        <span style={{ width: 7, height: 7, borderRadius: "50%", background: accent, flexShrink: 0, boxShadow: `0 0 0 3px ${borderColor}` }} />
+        <h3 style={{ margin: 0, fontSize: 14, fontWeight: 640, color: "var(--ink)", letterSpacing: "-.018em" }}>
           {dateSectionLabel(date)}
         </h3>
-        <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--muted)", fontWeight: 500 }}>
+        <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--faint)", fontWeight: 550 }}>
           {countLabel}
         </span>
       </div>
@@ -1438,8 +1495,9 @@ function TeamLogo({ team, size = 36 }) {
         onError={(e) => { e.currentTarget.style.display = "none"; }}
         style={{
           width: size, height: size, objectFit: "cover",
-          background: "var(--surface2)", border: "1px solid var(--border)",
-          borderRadius: 6, flexShrink: 0,
+          background: "var(--surface2)", border: "none",
+          boxShadow: "0 0 0 1px var(--border), 0 1px 2px rgba(16,24,40,.06)",
+          borderRadius: 9, flexShrink: 0,
         }}
       />
     );
@@ -1448,9 +1506,10 @@ function TeamLogo({ team, size = 36 }) {
     <div style={{
       width: size, height: size,
       display: "grid", placeItems: "center",
-      background: "var(--surface2)", border: "1px solid var(--border)",
-      borderRadius: 6, color: "var(--muted)",
-      fontSize: 13, fontWeight: 800, flexShrink: 0,
+      background: "linear-gradient(160deg, var(--surface2), var(--surface3))",
+      boxShadow: "inset 0 0 0 1px var(--border)",
+      borderRadius: 9, color: "var(--muted)",
+      fontSize: 13.5, fontWeight: 660, letterSpacing: "-.02em", flexShrink: 0,
     }}>
       {initial}
     </div>
@@ -1469,22 +1528,23 @@ function ResultRow({ team, name, score, won, wonOnPens, pen }) {
     }}>
       <TeamLogo team={team} />
       <span style={{
-        fontSize: 15, fontWeight: won ? 800 : 600,
-        color: won ? accent : "var(--text)",
+        fontSize: 15, fontWeight: won ? 660 : 520,
+        color: won ? "var(--ink)" : "var(--text)",
+        letterSpacing: "-.015em",
         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
       }}>{name}</span>
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
         {pen != null && (
           <span style={{
-            fontSize: 11, fontWeight: 700,
-            color: wonOnPens ? "var(--gold)" : "var(--muted)",
+            fontSize: 12, fontWeight: 550,
+            color: wonOnPens ? "var(--gold)" : "var(--faint)",
           }}>({pen})</span>
         )}
         <span style={{
-          fontFamily: "var(--font-display)",
-          fontSize: 27, fontWeight: 700,
-          color: won ? accent : "var(--text)",
+          fontSize: 21, fontWeight: 680,
+          color: won ? accent : "var(--faint)",
           minWidth: 24, textAlign: "right",
+          letterSpacing: "-.03em",
           fontVariantNumeric: "tabular-nums",
         }}>{score}</span>
       </div>
@@ -1505,7 +1565,7 @@ function ResultCard({ m, homeTeam, awayTeam, homeName, awayName, homeWon, awayWo
   return (
     <div className="result-card" style={rcs.card}>
       <div className="result-card-date" style={rcs.dateBlock}>
-        <span style={rcs.dateText}>{dateStr.toUpperCase()}</span>
+        <span style={rcs.dateText}>{dateStr}</span>
         {m.match_time && (
           <span style={rcs.timeText}>{m.match_time}</span>
         )}
@@ -1541,22 +1601,22 @@ const rcs = {
     gridTemplateColumns: "180px 1px 1fr auto",
     alignItems: "center",
     gap: 18,
-    background: "var(--surface)", border: "1px solid var(--border)",
-    borderRadius: 10,
-    padding: "16px 22px",
+    background: "var(--surface)", border: "none",
+    borderRadius: 14,
+    boxShadow: "var(--shadow)",
+    padding: "18px 24px",
+    transition: "box-shadow .2s var(--ease)",
   },
   dateBlock: { display: "flex", flexDirection: "column", gap: 4 },
   dateText: {
-    fontSize: 12, fontWeight: 800, color: "var(--text)",
-    letterSpacing: 1.6,
+    fontSize: 13, fontWeight: 550, color: "var(--muted)", letterSpacing: "-.005em",
   },
   timeText: {
-    fontSize: 18, fontWeight: 700, color: "var(--ink)",
-    letterSpacing: 0.5, fontVariantNumeric: "tabular-nums",
+    fontSize: 16, fontWeight: 600, color: "var(--ink)",
+    fontVariantNumeric: "tabular-nums",
   },
   stageHint: {
-    fontSize: 11, fontWeight: 700,
-    textTransform: "uppercase", letterSpacing: 1.4,
+    fontSize: 12, fontWeight: 500,
   },
   divider: { width: 1, alignSelf: "stretch", background: "var(--border)" },
   teamsCol: { display: "flex", flexDirection: "column" },
@@ -1566,24 +1626,21 @@ const rcs = {
     width: 150,
   },
   stagePill: {
-    fontSize: 11, fontWeight: 700, color: "var(--muted)",
-    textTransform: "uppercase", letterSpacing: 1.2,
+    fontSize: 12, fontWeight: 500, color: "var(--muted)",
     textAlign: "center",
   },
   fullTime: {
-    fontSize: 11, fontWeight: 700, color: "var(--accent)",
-    background: "rgba(var(--accent-rgb),.10)",
-    border: "1px solid rgba(var(--accent-rgb),.35)",
-    padding: "3px 10px", borderRadius: 4,
-    textTransform: "uppercase", letterSpacing: 1.2,
+    fontSize: 12, fontWeight: 500, color: "var(--accent)",
+    background: "rgba(var(--accent-rgb),.06)",
+    border: "1px solid rgba(var(--accent-rgb),.2)",
+    padding: "3px 9px", borderRadius: 6,
     textAlign: "center",
   },
   afterPens: {
-    fontSize: 11, fontWeight: 700, color: "var(--gold)",
-    background: "rgba(180,83,9,.08)",
-    border: "1px solid rgba(180,83,9,.3)",
-    padding: "3px 10px", borderRadius: 4,
-    textTransform: "uppercase", letterSpacing: 1.2,
+    fontSize: 12, fontWeight: 500, color: "var(--gold)",
+    background: "rgba(161,98,7,.07)",
+    border: "1px solid rgba(161,98,7,.22)",
+    padding: "3px 9px", borderRadius: 6,
     textAlign: "center",
   },
 };
@@ -1731,37 +1788,60 @@ function MatchCard({ match: m, teamName, teamById, teamGroup, phaseLabel, isOrga
 
 const bk = {
   colTitle: {
-    fontSize: 11, fontWeight: 700, color: "var(--muted)",
-    textTransform: "uppercase", letterSpacing: ".8px",
-    height: 32, display: "flex", alignItems: "center",
+    fontSize: 12, fontWeight: 620, color: "var(--muted)",
+    letterSpacing: "-.005em",
+    height: 34, display: "flex", alignItems: "center",
     padding: "0 8px", margin: 0,
   },
   scoreInput: {
-    width: 44, padding: "4px 6px", textAlign: "center", fontSize: 14, fontWeight: 700,
+    width: 44, padding: "4px 6px", textAlign: "center", fontSize: 14, fontWeight: 600,
     background: "var(--surface2)", border: "1px solid var(--border)",
     borderRadius: 6, color: "var(--text)", outline: "none",
   },
+  slot: {
+    display: "flex", alignItems: "center", justifyContent: "space-between",
+    padding: "9px 12px", gap: 8,
+    background: "transparent",
+  },
+  /* Winner gets a tint plus an inset left bar — readable at a glance when the
+     bracket is scanned as a whole rather than card by card. */
+  slotWon: {
+    background: "linear-gradient(90deg, rgba(var(--accent-rgb),.10), rgba(var(--accent-rgb),.03))",
+    boxShadow: "inset 3px 0 0 var(--accent)",
+  },
+  slotName: {
+    fontSize: 13.5, fontWeight: 520, color: "var(--text)",
+    letterSpacing: "-.012em",
+    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 150,
+  },
+  slotNameWon: { fontWeight: 660, color: "var(--ink)" },
+  slotScore: {
+    fontSize: 16, fontWeight: 690, minWidth: 22, textAlign: "right",
+    whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums", letterSpacing: "-.02em",
+  },
+  penScore: { fontSize: 11, fontWeight: 620, marginLeft: 4 },
 };
 
 const mc = {
   card: {
-    background: "var(--surface)", border: "1px solid var(--border)",
-    borderRadius: 12, padding: "14px 18px",
+    background: "var(--surface)", border: "none",
+    borderRadius: 14, padding: "16px 20px",
     borderLeft: "3px solid transparent",
+    boxShadow: "var(--shadow)",
   },
-  finished: { borderColor: "rgba(var(--accent-rgb),.25)" },
+  finished: { boxShadow: "0 0 0 1px rgba(var(--accent-rgb),.18), var(--shadow)" },
   row: { display: "flex", alignItems: "center", gap: 16 },
   stageBadge: {
-    fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 20,
-    textTransform: "uppercase", letterSpacing: ".5px",
+    fontSize: 11.5, fontWeight: 600, padding: "3px 10px", borderRadius: 99,
+    letterSpacing: "-.005em",
   },
-  team: { flex: 1, fontWeight: 600, fontSize: 15 },
-  winner: { color: "var(--accent)" },
+  team: { flex: 1, fontWeight: 520, fontSize: 15, letterSpacing: "-.012em" },
+  winner: { color: "var(--ink)", fontWeight: 660 },
   scoreBox: { display: "flex", alignItems: "center", gap: 8 },
-  score: { fontSize: 26, fontWeight: 700, color: "var(--muted)", minWidth: 28, textAlign: "center" },
+  score: { fontSize: 23, fontWeight: 680, color: "var(--faint)", minWidth: 26, textAlign: "center", fontVariantNumeric: "tabular-nums", letterSpacing: "-.03em" },
   winScore: { color: "var(--accent)" },
-  sep: { fontSize: 22, fontWeight: 300, color: "var(--border)" },
-  vsLabel: { fontSize: 13, fontWeight: 600, color: "var(--muted)", padding: "4px 12px", background: "var(--surface2)", borderRadius: 20 },
+  sep: { fontSize: 17, fontWeight: 300, color: "var(--border2)" },
+  vsLabel: { fontSize: 12, fontWeight: 620, color: "var(--faint)", padding: "4px 12px", background: "var(--surface2)", borderRadius: 99 },
   enterRow: { display: "flex", alignItems: "center", gap: 8, marginTop: 12, flexWrap: "wrap" },
   scoreInput: {
     width: 52, padding: "6px 8px", textAlign: "center", fontSize: 16, fontWeight: 700,
@@ -1773,29 +1853,33 @@ const mc = {
 const s = {
   shadowCard: {
     background: "var(--surface)",
-    border: "1px solid var(--border)",
-    borderRadius: 14,
-    boxShadow: "var(--shadow)",
+    border: "none",
+    borderRadius: 16,
+    boxShadow: "var(--shadow-md)",
   },
   label: {
-    fontSize: 12, letterSpacing: 3, textTransform: "uppercase",
-    color: "var(--muted)", fontWeight: 800,
+    fontSize: 12, color: "var(--faint)", fontWeight: 550, letterSpacing: "-.005em",
   },
   // ── Winner banner ──
   winner: {
-    minHeight: 150, marginBottom: 24,
-    borderRadius: 12,
-    border: "1px solid var(--border)",
+    marginBottom: 24,
+    borderRadius: 16,
+    border: "none",
     overflow: "hidden",
-    background: "linear-gradient(90deg, rgba(250,204,21,0.16), rgba(17,29,46,0.92) 42%, rgba(7,17,31,0.92)), url('https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=1600&q=70') center/cover",
+    /* Warm gold wash fading to white — celebratory without a photo. */
+    background: "linear-gradient(105deg, rgba(234,179,8,.13) 0%, rgba(234,179,8,.03) 34%, var(--surface) 68%)",
+    backgroundColor: "var(--surface)",
     display: "flex", alignItems: "center", justifyContent: "space-between",
-    padding: "0 34px",
-    boxShadow: "0 22px 55px rgba(16,24,40,.18)",
+    padding: "24px 28px",
+    boxShadow: "var(--shadow-md)",
     position: "relative", flexWrap: "wrap", gap: 18,
   },
-  winnerAccent: { position: "absolute", left: 0, top: 0, bottom: 0, width: 4, background: "var(--gold-bright)" },
+  winnerAccent: {
+    position: "absolute", left: 0, top: 0, bottom: 0, width: 3,
+    background: "linear-gradient(180deg, #facc15, #a16207)",
+  },
   winnerLeft: {
-    display: "flex", alignItems: "center", gap: 26,
+    display: "flex", alignItems: "center", gap: 18,
     flex: "1 1 280px", minWidth: 260,
   },
   winnerRight: {
@@ -1803,42 +1887,41 @@ const s = {
     flex: "0 1 auto", minWidth: 200,
   },
   winnerTrophy: {
-    fontSize: 52, lineHeight: 1, flexShrink: 0,
+    width: 46, height: 46, flexShrink: 0,
+    filter: "drop-shadow(0 2px 6px rgba(161,98,7,.3))",
   },
   winnerTitle: {
-    fontFamily: "var(--font-display)", textTransform: "uppercase",
-    marginTop: 10, fontSize: 42, fontWeight: 700,
-    lineHeight: .95, color: "#fff", letterSpacing: ".5px",
+    marginTop: 3, fontSize: 27, fontWeight: 690,
+    lineHeight: 1.15, color: "var(--ink)", letterSpacing: "-.032em",
   },
-  scoreText: { fontSize: 18, fontWeight: 800, marginTop: 8, color: "#fff" },
+  scoreText: { fontSize: 15, fontWeight: 500, marginTop: 5, color: "var(--text)" },
   // ── Tournament header ──
   tournamentHeader: {
-    padding: 30, marginBottom: 24,
+    padding: 26, marginBottom: 24,
     display: "flex", justifyContent: "space-between", alignItems: "center",
     gap: 24, flexWrap: "wrap",
   },
-  headerLeft: { display: "flex", alignItems: "center", gap: 22, flexWrap: "wrap" },
+  headerLeft: { display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" },
   logoShield: {
-    width: 92, height: 92, borderRadius: 18,
-    border: "1px solid rgba(var(--accent-rgb),.35)",
-    background: "linear-gradient(145deg, #ffffff, #eef2ee)",
+    width: 68, height: 68, borderRadius: 16,
+    border: "none",
+    background: "linear-gradient(150deg, var(--accent-lt), var(--accent-dk))",
     display: "grid", placeItems: "center",
-    fontFamily: "var(--font-display)",
-    fontSize: 30, fontWeight: 700, color: "var(--accent)", letterSpacing: 1.5,
-    boxShadow: "inset 0 0 0 1px rgba(16,24,40,.03), 0 4px 16px rgba(var(--accent-rgb),.10)",
+    fontSize: 20, fontWeight: 700, color: "#fff", letterSpacing: "-.01em",
+    boxShadow: "0 2px 4px rgba(16,24,40,.12), 0 10px 22px -8px rgba(var(--accent-rgb),.6), inset 0 1px 0 rgba(255,255,255,.26)",
     flexShrink: 0,
   },
   titleRow: { display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" },
   titleBig: {
-    fontFamily: "var(--font-display)", textTransform: "uppercase",
-    margin: 0, fontSize: 44, fontWeight: 700,
-    color: "var(--ink)", letterSpacing: ".5px", lineHeight: .95,
+    margin: 0, fontSize: 29, fontWeight: 690,
+    color: "var(--ink)", letterSpacing: "-.034em", lineHeight: 1.15,
   },
   editBtn: {
-    padding: "7px 12px", borderRadius: 7,
+    padding: "6px 12px", borderRadius: 8,
     border: "1px solid var(--border)",
-    color: "var(--muted)", background: "rgba(16,24,40,.04)",
-    fontSize: 13, cursor: "pointer",
+    color: "var(--text)", background: "var(--surface)",
+    boxShadow: "var(--shadow-xs)",
+    fontSize: 13, fontWeight: 550, cursor: "pointer", fontFamily: "inherit",
   },
   metaRow: {
     display: "flex", flexWrap: "wrap", alignItems: "center", gap: 14,
@@ -1850,10 +1933,11 @@ const s = {
     lineHeight: 1.4,
   },
   greenBadge: {
-    borderRadius: 999, padding: "5px 11px",
-    background: "rgba(var(--accent-rgb),.14)", color: "var(--accent)",
-    fontWeight: 800, fontSize: 13,
-    border: "1px solid rgba(var(--accent-rgb),.45)",
+    display: "inline-flex", alignItems: "center",
+    borderRadius: 99, padding: "4px 11px",
+    background: "var(--accent-soft)", color: "var(--accent)",
+    fontWeight: 600, fontSize: 12.5, letterSpacing: "-.005em",
+    border: "1px solid rgba(var(--accent-rgb),.16)",
   },
   addTeamInline: { display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" },
   logoPicker: {
@@ -1867,8 +1951,7 @@ const s = {
     transition: "border-color .15s",
   },
   logoPickerHint: {
-    fontSize: 10, fontWeight: 700, letterSpacing: "1px",
-    textTransform: "uppercase",
+    fontSize: 11, fontWeight: 500,
   },
   logoClearBtn: {
     width: 22, height: 22, borderRadius: 4,
@@ -1878,55 +1961,56 @@ const s = {
     cursor: "pointer", marginLeft: -4,
   },
   addTeamInput: {
-    width: 190, padding: "13px 14px",
-    background: "var(--surface2)",
-    border: "1px solid var(--border)",
+    width: 190, padding: "9px 12px",
+    background: "var(--surface)",
+    border: "1px solid var(--border2)",
     borderRadius: 8, color: "var(--text)", outline: "none",
-    fontSize: 14,
+    fontSize: 14, fontFamily: "inherit",
   },
   addTeamSmall: {
-    width: 64, padding: "13px 14px", textAlign: "center",
-    background: "var(--surface2)",
-    border: "1px solid var(--border)",
+    width: 56, padding: "9px 12px", textAlign: "center",
+    background: "var(--surface)",
+    border: "1px solid var(--border2)",
     borderRadius: 8, color: "var(--text)", textTransform: "uppercase",
-    fontSize: 14,
+    fontSize: 14, fontFamily: "inherit",
   },
   primaryBtn: {
-    padding: "13px 18px",
-    background: "linear-gradient(135deg, var(--accent), #16a34a)",
-    border: 0, borderRadius: 8, color: "#fff",
-    fontWeight: 800, fontSize: 14, cursor: "pointer",
-    boxShadow: "0 12px 24px rgba(var(--accent-rgb),.24)",
+    padding: "9px 16px",
+    background: "linear-gradient(180deg, var(--accent-lt), var(--accent))",
+    border: 0, borderRadius: 9, color: "#fff",
+    fontWeight: 560, fontSize: 14, cursor: "pointer",
+    fontFamily: "inherit",
+    boxShadow: "var(--shadow-accent), inset 0 1px 0 rgba(255,255,255,.22)",
   },
   // ── Prize panel ──
-  prizeCardWrap: { padding: 28, marginBottom: 28 },
+  prizeCardWrap: { padding: 26, marginBottom: 24 },
   prizeTop: {
     display: "flex", justifyContent: "space-between",
     alignItems: "flex-start", flexWrap: "wrap", gap: 16,
   },
-  sectionTitle: { margin: "8px 0 0", fontSize: 22, fontWeight: 900, color: "var(--ink)" },
-  poolValue: { fontSize: 36, fontWeight: 900, textAlign: "right", color: "var(--ink)", letterSpacing: "-.6px", fontVariantNumeric: "tabular-nums" },
+  sectionTitle: { margin: "5px 0 0", fontSize: 18, fontWeight: 640, color: "var(--ink)", letterSpacing: "-.024em" },
+  poolValue: { fontSize: 28, fontWeight: 690, textAlign: "right", color: "var(--ink)", letterSpacing: "-.035em", fontVariantNumeric: "tabular-nums", marginTop: 2 },
   prizeGrid: {
-    marginTop: 28,
+    marginTop: 22,
     display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
-    borderTop: "3px solid var(--ink)",
+    borderTop: "1px solid var(--border)",
   },
   prizeItem: {
-    padding: "24px 22px",
+    padding: "20px 20px",
     borderRight: "1px solid var(--border)",
-    background: "rgba(16,24,40,.03)",
   },
-  prizeAmount: { fontSize: 26, fontWeight: 900, letterSpacing: "-.4px", fontVariantNumeric: "tabular-nums" },
+  prizeAmount: { fontSize: 21, fontWeight: 650, letterSpacing: "-.028em", fontVariantNumeric: "tabular-nums" },
   // ── Footer info ──
   footerInfo: {
-    marginTop: 32, padding: 28,
-    display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 22,
+    marginTop: 32, padding: 26,
+    display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20,
   },
   infoItem: { display: "flex", gap: 14, alignItems: "center" },
   iconCircle: {
-    width: 54, height: 54, borderRadius: "50%",
+    width: 42, height: 42, borderRadius: 12,
     display: "grid", placeItems: "center",
-    background: "rgba(var(--accent-rgb),.14)",
+    background: "linear-gradient(160deg, rgba(var(--accent-rgb),.12), rgba(var(--accent-rgb),.05))",
+    boxShadow: "inset 0 0 0 1px rgba(var(--accent-rgb),.12)",
     color: "var(--accent)", fontSize: 24,
     flexShrink: 0,
   },
@@ -1936,14 +2020,13 @@ const s = {
   },
   resultsToolbar: {
     display: "flex", alignItems: "flex-end", gap: 22, flexWrap: "wrap",
-    padding: "14px 18px", marginBottom: 22,
-    background: "var(--surface)", border: "1px solid var(--border)",
-    borderRadius: 10,
+    padding: "16px 20px", marginBottom: 24,
+    background: "var(--surface)", border: "none",
+    borderRadius: 14, boxShadow: "var(--shadow)",
   },
   resultsFilterGroup: { display: "flex", flexDirection: "column", gap: 8, minWidth: 0 },
   resultsFilterLabel: {
-    fontSize: 11, fontWeight: 700, color: "var(--muted)",
-    textTransform: "uppercase", letterSpacing: ".7px",
+    fontSize: 12, fontWeight: 500, color: "var(--muted)",
   },
   qualLegend: {
     display: "flex", gap: 18, padding: "12px 16px",
@@ -1959,7 +2042,8 @@ const s = {
   },
   infoStrip: {
     display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
-    background: "var(--surface)", border: "1px solid var(--border)",
+    background: "var(--surface)", border: "none", borderRadius: 16,
+    boxShadow: "var(--shadow-md)", overflow: "hidden",
     marginTop: 32,
   },
   infoBlock: {
@@ -1968,8 +2052,7 @@ const s = {
     borderRight: "1px solid var(--border)",
   },
   infoLabel: {
-    fontSize: 11, fontWeight: 700, color: "var(--muted)",
-    textTransform: "uppercase", letterSpacing: "1.4px",
+    fontSize: 12, fontWeight: 500, color: "var(--muted)",
   },
   infoValue: {
     fontSize: 15, fontWeight: 600, color: "var(--text)",
@@ -1993,8 +2076,7 @@ const s = {
     paddingBottom: 18, borderBottom: "1px solid var(--border)",
   },
   prizePanelEyebrow: {
-    fontSize: 11, fontWeight: 600, color: "var(--muted)",
-    textTransform: "uppercase", letterSpacing: "1.6px", margin: 0, marginBottom: 6,
+    fontSize: 12, fontWeight: 500, color: "var(--muted)", margin: 0, marginBottom: 6,
   },
   prizePanelTotal: {
     display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2,
@@ -2017,20 +2099,20 @@ const s = {
     marginBottom: 16, paddingBottom: 14, borderBottom: "1px solid var(--border)",
   },
   phaseDot: { width: 10, height: 10, borderRadius: "50%", flexShrink: 0 },
-  sectionLabel: { fontSize: 12, fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 12 },
-  groupsGrid: { display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 22, marginTop: 26 },
+  sectionLabel: { fontSize: 12, fontWeight: 500, color: "var(--muted)", marginBottom: 12 },
+  groupsGrid: { display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 24, marginTop: 28 },
   groupCardWrap: { overflow: "hidden" },
   groupHead: {
     padding: "20px 22px",
     display: "flex", justifyContent: "space-between", alignItems: "center",
     borderBottom: "1px solid var(--border)",
-    background: "rgba(16,24,40,.04)",
+    background: "linear-gradient(180deg, var(--surface2), var(--surface))",
   },
   // legacy aliases (used by ungrouped block)
-  groupCard: { background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden" },
-  groupHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px", borderBottom: "2px solid", background: "var(--surface2)" },
-  groupLetter: { fontWeight: 900, fontSize: 20 },
-  advancingRow: { background: "rgba(var(--accent-rgb),.05)" },
+  groupCard: { background: "var(--surface)", border: "none", borderRadius: 16, overflow: "hidden", boxShadow: "var(--shadow-md)" },
+  groupHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: "2px solid", background: "var(--surface2)" },
+  groupLetter: { fontWeight: 700, fontSize: 19, letterSpacing: "-.028em" },
+  advancingRow: { background: "rgba(var(--accent-rgb),.045)" },
   advanceBanner: {
     display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16,
     padding: "16px 20px", marginBottom: 24,
@@ -2039,9 +2121,9 @@ const s = {
   },
   groupMoveRow: { padding: "12px 16px", borderTop: "1px solid var(--border)", background: "var(--surface2)" },
   ungroupedRow: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", borderBottom: "1px solid var(--border)" },
-  teamList: { background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, overflow: "hidden" },
-  teamRow: { display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderBottom: "1px solid var(--border)" },
-  teamNum: { width: 24, height: 24, borderRadius: "50%", background: "var(--surface2)", color: "var(--muted)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600, flexShrink: 0 },
+  teamList: { background: "var(--surface)", border: "none", borderRadius: 16, overflow: "hidden", boxShadow: "var(--shadow-md)" },
+  teamRow: { display: "flex", alignItems: "center", gap: 12, padding: "13px 18px", borderBottom: "1px solid var(--border)" },
+  teamNum: { width: 26, height: 26, borderRadius: 8, background: "var(--surface2)", color: "var(--muted)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 620, fontVariantNumeric: "tabular-nums", flexShrink: 0 },
   rosterPanel: {
     padding: "10px 16px 14px 52px",
     background: "rgba(var(--accent-rgb),.03)",
@@ -2049,12 +2131,13 @@ const s = {
   },
   rosterRow: { display: "flex", alignItems: "center", gap: 10, padding: "5px 0" },
   permissionsCard: {
-    background: "var(--surface)", border: "1px solid var(--border)",
-    borderRadius: 12, padding: 24, maxWidth: 640,
+    background: "var(--surface)", border: "none",
+    borderRadius: 16, padding: 26, maxWidth: 640,
+    boxShadow: "var(--shadow-md)",
   },
   collabRow: {
     display: "flex", alignItems: "center", justifyContent: "space-between",
-    padding: "10px 14px", background: "var(--surface2)",
-    border: "1px solid var(--border)", borderRadius: 8,
+    padding: "11px 15px", background: "var(--surface2)",
+    border: "1px solid var(--border)", borderRadius: 10,
   },
 };
