@@ -35,9 +35,25 @@ spec:
                 secretKeyRef:
                   name: tournament-secrets
                   key: POSTGRES_PASSWORD
+            # initdb refuses a data directory that is not empty; a volume can
+            # arrive with lost+found on it, so keep the cluster in a subdir.
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
           volumeMounts:
             - name: postgres-storage
               mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
   volumeClaimTemplates:
     - metadata:
         name: postgres-storage

@@ -19,19 +19,57 @@ spec:
           ports:
             - containerPort: 8000
           env:
-            - name: DATABASE_URL
+            # DATABASE_URL is assembled from these so the password never has to
+            # live in the ConfigMap. Order matters: $(VAR) only expands for
+            # variables defined earlier in this list.
+            - name: POSTGRES_USER
               valueFrom:
                 configMapKeyRef:
                   name: tournament-config
-                  key: DATABASE_URL
+                  key: POSTGRES_USER
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: tournament-config
+                  key: POSTGRES_DB
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: tournament-config
+                  key: POSTGRES_HOST
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: tournament-secrets
+                  key: POSTGRES_PASSWORD
+            - name: DATABASE_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):5432/$(POSTGRES_DB)"
             - name: SECRET_KEY
               valueFrom:
                 secretKeyRef:
                   name: tournament-secrets
                   key: SECRET_KEY
+            - name: ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: tournament-config
+                  key: ENV
           readinessProbe:
             httpGet:
               path: /health
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

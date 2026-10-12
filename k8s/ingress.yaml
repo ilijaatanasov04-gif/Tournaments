@@ -3,21 +3,15 @@ kind: Ingress
 metadata:
   name: tournament-ingress
   namespace: tournament
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   ingressClassName: nginx
   rules:
     - host: tournament.local
       http:
         paths:
-          - path: /api
-            pathType: Prefix
-            backend:
-              service:
-                name: backend-service
-                port:
-                  number: 8000
+          # Everything goes to the frontend; its nginx serves the static build
+          # and proxies /api/ to the backend Service. No rewrite annotation is
+          # needed, so hashed asset URLs (/assets/*.js) stay intact.
           - path: /
             pathType: Prefix
             backend:

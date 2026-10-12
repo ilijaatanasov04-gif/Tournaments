@@ -1,8 +1,10 @@
-FROM node:20-alpine AS builder
+# The build output is static files, so the builder always runs on the build
+# machine's own architecture; only the nginx stage is built per target platform.
+FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 COPY . .
 RUN npm run build
 

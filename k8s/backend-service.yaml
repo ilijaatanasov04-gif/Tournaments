@@ -1,7 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: backend-service
+  # Named "backend" so the frontend's nginx.conf (proxy_pass http://backend:8000/)
+  # resolves identically under Docker Compose and Kubernetes.
+  name: backend
   namespace: tournament
 spec:
   selector:

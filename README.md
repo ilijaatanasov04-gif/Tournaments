@@ -45,7 +45,7 @@ Built with **FastAPI + PostgreSQL** on the backend and **React (Vite)** on the f
 Requirements: Docker with the Compose plugin.
 
 ```bash
-cp .env.example .env    # optional for local use — defaults work out of the box
+cp .env.example .env    # required — docker-compose.yml holds no values itself
 docker compose up -d --build
 ```
 
@@ -64,16 +64,19 @@ docker compose exec backend python seed_demo.py
 
 ## Configuration
 
-All configuration is via environment variables (see `.env.example`):
+`docker-compose.yml` contains no configuration values. Every setting lives in
+`.env` (copied from `.env.example`) and is injected into the containers with
+`env_file`, so credentials are never committed — `.env` is gitignored.
 
-| Variable | Default | Purpose |
+| Variable | Example | Purpose |
 |----------|---------|---------|
 | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | `tournament_user` / `tournament_pass` / `tournament_db` | Database credentials |
 | `SECRET_KEY` | dev-only fallback | JWT signing key — **required in production** (`openssl rand -hex 32`) |
 | `ENV` | `dev` | Set to `production` to make the backend refuse to start without a real `SECRET_KEY` |
-| `CORS_ORIGINS` | localhost origins | Comma-separated list of allowed browser origins |
+| `DATABASE_URL` | `postgresql://tournament_user:tournament_pass@db:5432/tournament_db` | Backend connection string — must match the `POSTGRES_*` values |
+| `CORS_ORIGINS` | `http://localhost:5173` | Only needed for the Vite dev server; the Docker/k8s frontend is same-origin |
 | `BACKEND_PORT` / `FRONTEND_PORT` | `8000` / `3000` | Host ports |
-| `VITE_API_URL` (frontend build) | `http://localhost:8000` | API base URL baked into the frontend at build time |
+| `VITE_API_URL` (frontend build, `frontend/.env.production`) | `/api` | API base URL baked into the frontend image; relative so nginx proxies it |
 
 ## Local development
 
@@ -122,11 +125,44 @@ alembic upgrade head
 
 ## Kubernetes
 
-Ready-to-adapt manifests live in `k8s/` (namespace, Postgres StatefulSet, backend/frontend Deployments + Services, Ingress, ConfigMap, Secrets). Replace `YOUR_DOCKERHUB_USERNAME` in the deployment images and change the values in `secrets.yaml` before applying:
+Plain manifests live in `k8s/`: `namespace`, a Postgres **StatefulSet** with a
+`volumeClaimTemplate` behind a headless Service, backend/frontend Deployments +
+Services, a ConfigMap for non-secret config, a Secret for `SECRET_KEY` and
+`POSTGRES_PASSWORD`, and an Ingress.
+
+The images are pushed to Docker Hub by CI as `ile04/tournament-backend` and
+`ile04/tournament-frontend`. Change the values in `k8s/secrets.yaml` before any
+real deployment, then:
 
 ```bash
 kubectl apply -f k8s/
+kubectl -n tournament rollout status statefulset/db
+kubectl -n tournament rollout status deployment/backend
+kubectl -n tournament rollout status deployment/frontend
 ```
+
+`00-namespace.yaml` sorts first on purpose: `kubectl apply -f` walks the
+directory alphabetically and everything else needs the namespace to exist.
+
+Requires an ingress controller (`minikube addons enable ingress`) and a hosts
+entry for `tournament.local`. Where it points depends on the minikube driver:
+
+```bash
+# macOS / Windows with the Docker driver — the node IP is not reachable from
+# the host, so the ingress is published on localhost through a tunnel:
+echo "127.0.0.1 tournament.local" | sudo tee -a /etc/hosts
+sudo minikube tunnel            # leave running in its own terminal
+
+# Linux, or a VM driver — the node IP is reachable directly:
+echo "$(minikube ip) tournament.local" | sudo tee -a /etc/hosts
+```
+
+Then open <http://tournament.local>.
+
+Only the frontend is exposed through the Ingress. Its nginx serves the static
+build and proxies `/api/` to the `backend` Service, so the browser talks to a
+single origin — the same arrangement as under Docker Compose, and no CORS
+configuration is needed in the cluster.
 
 ## Project structure
 

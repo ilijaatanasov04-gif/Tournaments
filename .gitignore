@@ -28,3 +28,6 @@ postgres_data/
 # Not part of the public repo (sale materials + university docs)
 marketing/
 Detailed_Tournament_Documentation.*
+
+# Course TODO (not part of the public repo)
+TODO.md
