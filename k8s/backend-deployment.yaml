@@ -16,6 +16,8 @@ spec:
       containers:
         - name: backend
           image: ile04/tournament-backend:latest
+          # Always re-pull so a rollout picks up whatever CI last pushed as :latest.
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
           env:
